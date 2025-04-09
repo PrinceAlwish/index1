@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAM Pro - Achievement Planner</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --background: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f0f4ff, #ffffff);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .main-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        .progress-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary) 0% 20%, #e2e8f0 20% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .progress-inner {
+            background: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .guide-accordion {
+            background: var(--background);
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .guide-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .guide-item summary {
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .guide-item p {
+            margin: 0.5rem 0 0 1.5rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .step-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: var(--background);
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .step-input:hover {
+            transform: translateX(5px);
+        }
+
+        .suggestion-chip {
+            background: #e0e7ff;
+            color: var(--secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            display: inline-block;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-1px);
+        }
+
+        input, select {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .motivation-text {
+            font-style: italic;
+            color: #64748b;
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h1>🚀 Achievement Pathway Planner</h1>
+            <div class="motivation-text" id="dailyTip"></div>
+
+            <div class="progress-circle">
+                <div class="progress-inner" id="currentLevel">3/5</div>
+            </div>
+
+            <div class="input-group">
+                <label>Current Satisfaction Level</label>
+                <select id="satisfactionLevel" onchange="updateProgress()">
+                    <option value="1">⭐ Level 1 - Foundation Stage</option>
+                    <option value="2">⭐⭐ Level 2 - Development Phase</option>
+                    <option value="3">⭐⭐⭐ Level 3 - Growth Period</option>
+                    <option value="4">⭐⭐⭐⭐ Level 4 - Optimization Stage</option>
+                    <option value="5">⭐⭐⭐⭐⭐ Level 5 - Mastery Level</option>
+                </select>
+            </div>
+
+            <div class="guide-accordion" id="guideAccordion"></div>
+
+            <div id="stepsContainer"></div>
+        </div>
+
+        <div class="sidebar">
+            <h3>📚 Action Guide</h3>
+            <div id="suggestions">
+                <div class="suggestion-chip" onclick="insertSuggestion('Research best practices')">Research</div>
+                <div class="suggestion-chip" onclick="insertSuggestion('Consult with experts')">Expert Advice</div>
+                <div class="suggestion-chip" onclick="insertSuggestion('Allocate dedicated time')">Time Management</div>
+                <div class="suggestion-chip" onclick="insertSuggestion('Track progress weekly')">Progress Tracking</div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">📅 Progress Tracker</h3>
+            <div id="progressHistory"></div>
+            <button onclick="savePlan()" style="margin-top: 1.5rem;">💾 Save Achievement Plan</button>
+            <button onclick="printPlan()" style="margin-top: 1rem;">🖨️ Print Action Plan</button>
+        </div>
+    </div>
+
+    <script>
+        const motivationTips = [
+            "Small consistent steps lead to big transformations!",
+            "Progress is progress, no matter how small!",
+            "Every master was once a beginner. Keep going!",
+            "Your potential is limitless - keep reaching!",
+            "Celebrate small wins along the journey!",
+        ];
+
+        const levelGuides = {
+            1: {
+                title: "⭐ Foundation Building",
+                tips: [
+                "Identify core requirements and basic needs",
+                "Establish fundamental systems and processes",
+                "Document current state and pain points",
+                "Prioritize immediate improvements"
+                ]
+            },
+            2: {
+                title: "⭐⭐ Development Phase",
+                tips: [
+                "Implement basic optimization strategies",
+                "Establish measurement metrics",
+                "Develop skill-building routine",
+                "Create feedback collection system"
+                ]
+            },
+            3: {
+                title: "⭐⭐⭐ Growth Period",
+                tips: [
+                "Refine existing processes",
+                "Expand capabilities and resources",
+                "Implement intermediate strategies",
+                "Establish quality control measures"
+                ]
+            },
+            4: {
+                title: "⭐⭐⭐⭐ Optimization Stage",
+                tips: [
+                "Advanced process optimization",
+                "Implement automation where possible",
+                "Develop continuous improvement system",
+                "Establish benchmarking practices"
+                ]
+            },
+            5: {
+                title: "⭐⭐⭐⭐⭐ Mastery Level",
+                tips: [
+                "Mentor others in your expertise",
+                "Contribute to industry knowledge",
+                "Innovate and create new systems",
+                "Maintain continuous refinement"
+                ]
+            }
+        };
+
+        function updateProgress() {
+            const currentLevel = parseInt(document.getElementById('satisfactionLevel').value);
+            document.getElementById('currentLevel').textContent = `${currentLevel}/5`;
+            document.querySelector('.progress-circle').style.background = 
+                `conic-gradient(var(--primary) 0% ${currentLevel*20}%, #e2e8f0 ${currentLevel*20}% 100%)`;
+            
+            updateGuide(currentLevel);
+            calculateSteps();
+        }
+
+        function updateGuide(level) {
+            const guide = levelGuides[level];
+            const accordion = document.getElementById('guideAccordion');
+            accordion.innerHTML = `
+                <div class="guide-item">
+                    <details open>
+                        <summary>📘 ${guide.title} Guide</summary>
+                        ${guide.tips.map(tip => `<p>✔️ ${tip}</p>`).join('')}
+                    </details>
+                </div>
+            `;
+        }
+
+        function insertSuggestion(text) {
+            const emptyInput = [...document.querySelectorAll('#stepsContainer input')]
+                .find(input => !input.value);
+            if(emptyInput) emptyInput.value = text;
+        }
+
+        function calculateSteps() {
+            const currentLevel = parseInt(document.getElementById('satisfactionLevel').value);
+            const stepsNeeded = 5 - currentLevel;
+            const container = document.getElementById('stepsContainer');
+            
+            container.innerHTML = currentLevel === 5 ? 
+                `<div class="motivation-text">🎉 You're at the peak! Maintain excellence through continuous improvement!</div>` :
+                `<h3>📈 Advancement Pathway (${stepsNeeded} Steps to Mastery)</h3>`;
+
+            for(let i = 1; i <= stepsNeeded; i++) {
+                const step = document.createElement('div');
+                step.className = 'step-input';
+                step.innerHTML = `
+                    <span>${i}.</span>
+                    <input type="text" 
+                           placeholder="Describe step ${i} action (e.g., ${getStepSuggestion(currentLevel, i)})"
+                           id="step${i}">
+                `;
+                container.appendChild(step);
+            }
+        }
+
+        function getStepSuggestion(currentLevel, stepNumber) {
+            const suggestions = [
+                "conduct research analysis",
+                "implement new strategy",
+                "schedule expert consultation",
+                "develop measurement system",
+                "create implementation timeline"
+            ];
+            return suggestions[(currentLevel + stepNumber) % suggestions.length];
+        }
+
+        function savePlan() {
+            const plan = {
+                level: document.getElementById('satisfactionLevel').value,
+                steps: [...document.querySelectorAll('#stepsContainer input')].map(input => input.value),
+                date: new Date().toISOString()
+            };
+            localStorage.setItem('achievementPlan', JSON.stringify(plan));
+            showNotification('Plan saved successfully! 🎉');
+        }
+
+        function printPlan() {
+            const printContent = document.querySelector('.main-content').outerHTML;
+            const win = window.open('', '_blank');
+            win.document.write(`<pre>${printContent}</pre>`);
+            win.print();
+        }
+
+        function showNotification(text) {
+            const notification = document.createElement('div');
+            notification.textContent = text;
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.background = 'var(--primary)';
+            notification.style.color = 'white';
+            notification.style.padding = '1rem';
+            notification.style.borderRadius = '0.5rem';
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Initialize
+        window.onload = () => {
+            document.getElementById('dailyTip').textContent = 
+                motivationTips[Math.floor(Math.random() * motivationTips.length)];
+            updateProgress();
+            
+            const savedPlan = localStorage.getItem('achievementPlan');
+            if(savedPlan) {
+                const plan = JSON.parse(savedPlan);
+                document.getElementById('satisfactionLevel').value = plan.level;
+                updateProgress();
+                setTimeout(() => {
+                    plan.steps.forEach((step, i) => {
+                        const input = document.getElementById(`step${i+1}`);
+                        if(input) input.value = step;
+                    });
+                }, 100);
+            }
+        }
+    </script>
+</body>
+</html>
